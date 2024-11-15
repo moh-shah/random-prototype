@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using CardMatch.Models;
 using UnityEngine;
 using Debug = UnityEngine.Debug;
+using Random = UnityEngine.Random;
 
 namespace CardMatch.Gameplay
 {
@@ -44,17 +45,19 @@ namespace CardMatch.Gameplay
                 Destroy(card.gameObject);
 
             _allCards.Clear();
+            
+            var randomTypes = GetRandomTypes();
 
             // Calculate total grid dimensions
             var cardSize = Vector2.zero;
             var gridWidth = 0f;
             var gridHeight = 0f;
-            var type = 0;
+            
             for (var i = 0; i < _settings.rows; i++)
             {
                 for (var j = 0; j < _settings.columns; j++)
                 {
-                    var newCard = _cardFactory.Create((CardType)type, parent: cardsParent);
+                    var newCard = _cardFactory.Create(randomTypes.Pop(), parent: cardsParent);
                     newCard.CardFlippedByClick += _cardMatchEngine.CardFlippedByClick;
                     newCard.CardClicked += () => _audioManager.OnCardClicked();
                     newCard.CardDestroyed += CardDestroyed;
@@ -76,9 +79,6 @@ namespace CardMatch.Gameplay
                         gridWidth = Mathf.Abs(x) + cardSize.x;
 
                     _allCards.Add(newCard);
-                    if (_allCards.Count % 2 == 0)
-                        type++;
-
                     newCard.gameObject.SetActive(false);
                 }
             }
@@ -99,6 +99,28 @@ namespace CardMatch.Gameplay
 
             foreach (var cardPresenter in _allCards)
                 cardPresenter.ShowThenHide(2);
+        }
+
+        private Stack<CardType> GetRandomTypes()
+        {
+            var randomTypes = new Stack<CardType>();
+            var cardTypes = new List<CardType>();
+            for (var i = 0; i < _settings.rows * _settings.columns / 2; i++)
+            {
+                cardTypes.Add((CardType)i);
+                cardTypes.Add((CardType)i);
+            }
+
+            var rnd = new System.Random(DateTime.Now.Millisecond);
+            var toChooseFrom = new List<CardType>(cardTypes);
+            for (var i = 0; i < cardTypes.Count; i++)
+            {
+                var randomIndex = rnd.Next(0,toChooseFrom.Count);
+                randomTypes.Push(toChooseFrom[randomIndex]);
+                toChooseFrom.RemoveAt(randomIndex);
+            }
+
+            return randomTypes;
         }
 
         private void AdjustCamera(float gridWidth, float gridHeight)

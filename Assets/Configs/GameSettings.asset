@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4a537a9e9e8da324abad564b945fd5a4, type: 3}
   m_Name: GameSettings
   m_EditorClassIdentifier: 
-  rows: 2
-  columns: 3
+  rows: 4
+  columns: 4
   spaceBtwnCards: 0.5
   scorePerMatch: 2
   comboScoreAmplifier: 5
