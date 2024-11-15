@@ -7,12 +7,14 @@ namespace CardMatch.Gameplay
 {
     public class CardPresenter : MonoBehaviour
     {
-        public event Action<CardPresenter> CardClicked = delegate { };
+        public event Action<CardPresenter> CardFlippedByClick = delegate { };
+        public event Action CardClicked = delegate { };
+        public event Action<CardPresenter> CardDestroyed = delegate { };
         
         public CardType CardType { get; private set; }
      
-        [SerializeField] public SpriteRenderer cardBackground;
-        [SerializeField] public SpriteRenderer backOfTheCard;
+        [SerializeField] public SpriteRenderer  cardBackground;
+        [SerializeField] public SpriteRenderer  backOfTheCard;
         [SerializeField] private SpriteRenderer iconSprite;
         
         private bool _canBeClicked = true;
@@ -20,10 +22,14 @@ namespace CardMatch.Gameplay
         private const float RotationHalfTime = .5f;
         private const float FlipTime = RotationHalfTime * .5f;
         private const float AnglePerFrame = 180 / RotationHalfTime;
-        
-        public void Setup(CardType t)
+        private const float MovingSpeed = 10;
+
+        public void Setup(
+            CardType t,
+            Sprite s
+        )
         {
-            iconSprite.sprite = DependencyManager.Instance.spritesProvider.GetSpriteFor(t);
+            iconSprite.sprite = s;
             CardType = t;
             Flip(false);
         }
@@ -36,6 +42,29 @@ namespace CardMatch.Gameplay
         public void Hide()
         {
             StartCoroutine(FlipToFaceDown());
+        }
+
+        public IEnumerator GoTo(Vector3 targetPos)
+        {
+            //just to do the thing... its not safe :) 
+            cardBackground.sortingOrder += 10;
+            iconSprite.sortingOrder += 10;
+            
+            while (Vector3.Distance(transform.position,targetPos) > .01f)
+            {
+                transform.position = Vector3.Lerp(
+                    transform.position, 
+                    targetPos,
+                    Time.deltaTime * MovingSpeed
+                );
+                yield return null;
+            }
+        }
+
+        public void DestroyCard()
+        {
+            CardDestroyed.Invoke(this);
+            Destroy(gameObject);
         }
 
         private void Flip(bool showFace)
@@ -64,6 +93,7 @@ namespace CardMatch.Gameplay
         
         private IEnumerator FlipToFaceUp(bool fromClick)
         {
+            CardClicked.Invoke();
             _canBeClicked = false;
             var flipped = false;
             var timer = 0f;
@@ -82,7 +112,7 @@ namespace CardMatch.Gameplay
             transform.rotation = Quaternion.Euler(0,180,0);
             
             if (fromClick)
-                CardClicked.Invoke(this);
+                CardFlippedByClick.Invoke(this);
         }
             
         private IEnumerator FlipToFaceDown()
@@ -104,5 +134,7 @@ namespace CardMatch.Gameplay
             transform.rotation = Quaternion.Euler(0,0,0);
             _canBeClicked = true;
         }
+
+       
     }
 }

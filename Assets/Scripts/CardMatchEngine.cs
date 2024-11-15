@@ -7,12 +7,15 @@ namespace CardMatch.Gameplay
 {
     public class CardMatchEngine : MonoBehaviour
     {
+        public event Action OnMatch = delegate { };
+        public event Action OnMisMatch = delegate { };
+        
         private CardPresenter _lastClickedCard;
         private Queue<(CardPresenter c1, CardPresenter c2)> _processQ = new();
         private (CardPresenter c1, CardPresenter c2) _clickedBuffer;
         private bool _isPresenting;
         
-        public void CardClicked(CardPresenter clickedCard)
+        public void CardFlippedByClick(CardPresenter clickedCard)
         {
             if (_clickedBuffer.c1 == null) 
                 _clickedBuffer.c1 = clickedCard;
@@ -52,15 +55,25 @@ namespace CardMatch.Gameplay
                     if (cardPair.c1.CardType == cardPair.c2.CardType)
                     {
                         Debug.Log("Match!");
-                        yield return new WaitForSeconds(2);
-                        Destroy(cardPair.c1.gameObject);
-                        Destroy(cardPair.c2.gameObject);
+                        var goTos = new[]
+                        {
+                            StartCoroutine(cardPair.c1.GoTo(Vector3.zero)),
+                            StartCoroutine(cardPair.c2.GoTo(Vector3.zero))
+                        };
+                        
+                        foreach (var goTo in goTos)
+                            yield return goTo;
+                        
+                        OnMatch.Invoke();
+                        cardPair.c1.DestroyCard();
+                        cardPair.c2.DestroyCard();
                     }
                     else
                     {
                         Debug.Log("No Match!");
                         cardPair.c1.Hide();
                         cardPair.c2.Hide();
+                        OnMisMatch.Invoke();
                     }
 
                     _isPresenting = false;
