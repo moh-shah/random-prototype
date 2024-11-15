@@ -5,8 +5,6 @@ namespace CardMatch.Gameplay
 {
     public class GameManager : MonoBehaviour
     {
-        //public static GameManager Instance;
-        
         public BoardPresenter boardPresenter;
         public CardMatchEngine cardMatchEngine;
         public CardFactory cardFactory;
@@ -19,19 +17,8 @@ namespace CardMatch.Gameplay
         private ScoringSystem _scoringSystem;
         private PersistentDataManager _persistentDataManager;
         
-        //starting point of the game
         private void Awake()
         {
-            /*if (Instance == null)
-            {
-                Instance = this;
-                DontDestroyOnLoad(this);
-            }
-            else
-            {
-                Destroy(gameObject);
-            }*/
-            
             _scoringSystem = new ScoringSystem(cardMatchEngine, settings);
             _persistentDataManager = new PersistentDataManager(_scoringSystem);
             cardFactory.Setup(spritesProvider);
@@ -39,7 +26,8 @@ namespace CardMatch.Gameplay
             audioManager.Setup(settings);
             boardPresenter.Setup(cardMatchEngine, cardFactory, settings, audioManager);
             boardPresenter.OnBoardCleared += _persistentDataManager.OnGameEnded;
-            boardPresenter.OnBoardCleared += audioManager.OnGameEEnded;
+            boardPresenter.OnBoardCleared += audioManager.OnGameEnded;
+            boardPresenter.OnBoardCleared += uiManager.OnGameEnded;
             cardMatchEngine.OnMatch += audioManager.OnMatch;
             cardMatchEngine.OnMisMatch += audioManager.OnMisMatch;
         }

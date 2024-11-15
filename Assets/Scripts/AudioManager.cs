@@ -16,6 +16,6 @@ namespace CardMatch.Gameplay
         public void OnCardClicked() => audioSource.PlayOneShot(_settings.onCardClicked);
         public void OnMatch() => audioSource.PlayOneShot(_settings.onCardsMatch);
         public void OnMisMatch() => audioSource.PlayOneShot(_settings.onCardsMisMatch);
-        public void OnGameEEnded() => audioSource.PlayOneShot(_settings.onBoardCleared);
+        public void OnGameEnded() => audioSource.PlayOneShot(_settings.onBoardCleared);
     }
 }
