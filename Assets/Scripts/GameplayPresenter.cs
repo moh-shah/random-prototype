@@ -33,13 +33,12 @@ namespace CardMatch.Gameplay
             var cardSize = Vector2.zero;
             var gridWidth = 0f;
             var gridHeight = 0f;
-
-            for (int i = 0; i < rows; i++)
+            for (var i = 0; i < rows; i++)
             {
-                for (int j = 0; j < columns; j++)
+                for (var j = 0; j < columns; j++)
                 {
                     var newCard = DependencyManager.Instance.cardFactory.Create(CardType.Apple, parent: cardsParent);
-
+                    
                     if (i == 0 && j == 0)
                     {
                         // Fetch card size from the first card created
@@ -71,21 +70,16 @@ namespace CardMatch.Gameplay
 
         private void AdjustCamera(float gridWidth, float gridHeight)
         {
+            const float padding = 1f;
             var mainCamera = Camera.main;
+            
+            // Calculate required orthographic size
+            var horizontalSize = (gridWidth + padding) / 2 / mainCamera.aspect;
+            var verticalSize = (gridHeight + padding) / 2;
+            mainCamera.orthographicSize = Mathf.Max(horizontalSize, verticalSize);
 
-            if (mainCamera != null)
-            {
-                // Add optional padding around the grid
-                float padding = 1f; // Adjust as needed
-
-                // Calculate required orthographic size
-                float horizontalSize = (gridWidth + padding) / 2 / mainCamera.aspect;
-                float verticalSize = (gridHeight + padding) / 2;
-                mainCamera.orthographicSize = Mathf.Max(horizontalSize, verticalSize);
-
-                // Center the camera on the grid
-                mainCamera.transform.position = new Vector3(0, 0, mainCamera.transform.position.z);
-            }
+            // Center the camera on the grid
+            mainCamera.transform.position = new Vector3(0, 0, mainCamera.transform.position.z);
         }
     }
 }
