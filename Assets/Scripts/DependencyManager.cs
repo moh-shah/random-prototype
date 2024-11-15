@@ -10,7 +10,7 @@ namespace CardMatch.Gameplay
     public class DependencyManager : MonoBehaviour
     {
         public static DependencyManager Instance;
-        
+        public CardMatchEngine cardMatchEngine;
         public SpritesProvider spritesProvider;
         public CardFactory cardFactory;
         

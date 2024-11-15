@@ -2,12 +2,13 @@ using System;
 using System.Collections;
 using CardMatch.Models;
 using UnityEngine;
-using UnityEngine.EventSystems;
 
 namespace CardMatch.Gameplay
 {
-    public class CardPresenter : MonoBehaviour 
+    public class CardPresenter : MonoBehaviour
     {
+        public event Action<CardPresenter> CardClicked = delegate { };
+        
         public CardType CardType { get; private set; }
      
         [SerializeField] public SpriteRenderer cardBackground;
@@ -15,7 +16,10 @@ namespace CardMatch.Gameplay
         [SerializeField] private SpriteRenderer iconSprite;
         
         private bool _canBeClicked = true;
-        private bool _facedUp;
+        
+        private const float RotationHalfTime = .5f;
+        private const float FlipTime = RotationHalfTime * .5f;
+        private const float AnglePerFrame = 180 / RotationHalfTime;
         
         public void Setup(CardType t)
         {
@@ -24,9 +28,18 @@ namespace CardMatch.Gameplay
             Flip(false);
         }
 
-        public void Flip(bool showFace)
+        public void ShowThenHide(float seconds)
         {
-            _facedUp = showFace;
+            StartCoroutine(ShowThenHideIE(seconds));
+        }
+
+        public void Hide()
+        {
+            StartCoroutine(FlipToFaceDown());
+        }
+
+        private void Flip(bool showFace)
+        {
             iconSprite.sortingOrder = cardBackground.sortingOrder + (showFace ? 1 : -1);
             backOfTheCard.sortingOrder = cardBackground.sortingOrder + (showFace ? -1 : 1);
         }
@@ -34,25 +47,31 @@ namespace CardMatch.Gameplay
         private void OnMouseDown()
         {
             if (_canBeClicked == false)
-                return;    
-            
-            StartCoroutine(Show(2));
+                return;
+
+            if (_canBeClicked)
+                StartCoroutine(FlipToFaceUp(fromClick: true));
         }
 
-        //I would normally use DoTween to do these things... but in the description, it have been mentioned not to use pre-built things...
-        private IEnumerator Show(float seconds)
+        //I would normally use DoTween to do these things...
+        //but in the description, it have been mentioned not to use pre-built things...
+        private IEnumerator ShowThenHideIE(float seconds)
         {
-            const float rotationHalfTime = .5f;
-            const float flipTime = rotationHalfTime * .5f;
-            const float anglePerFrame = 180 / rotationHalfTime;
-            var flipped = false;
+            yield return FlipToFaceUp(fromClick: false);
+            yield return new WaitForSeconds(seconds);
+            yield return FlipToFaceDown();
+        }
+        
+        private IEnumerator FlipToFaceUp(bool fromClick)
+        {
             _canBeClicked = false;
+            var flipped = false;
             var timer = 0f;
-            while (timer < rotationHalfTime)
+            while (timer < RotationHalfTime)
             {
-                transform.Rotate(Vector3.up, Time.deltaTime * anglePerFrame);
+                transform.Rotate(Vector3.up, Time.deltaTime * AnglePerFrame);
                 timer += Time.deltaTime;
-                if (!flipped && timer > flipTime)
+                if (!flipped && timer > FlipTime)
                 {
                     Flip(true);
                     flipped = true;
@@ -62,15 +81,19 @@ namespace CardMatch.Gameplay
             }
             transform.rotation = Quaternion.Euler(0,180,0);
             
-            yield return new WaitForSeconds(seconds);
-
-            flipped = false;
-            timer = 0f;
-            while (timer < rotationHalfTime)
+            if (fromClick)
+                CardClicked.Invoke(this);
+        }
+            
+        private IEnumerator FlipToFaceDown()
+        {
+            var flipped = false;
+            var timer = 0f;
+            while (timer < RotationHalfTime)
             {
-                transform.Rotate(Vector3.up, -Time.deltaTime * anglePerFrame);
+                transform.Rotate(Vector3.up, -Time.deltaTime * AnglePerFrame);
                 timer += Time.deltaTime;
-                if (!flipped && timer > flipTime)
+                if (!flipped && timer > FlipTime)
                 {
                     Flip(false);
                     flipped = true;
